@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025 Radiology Flashcard by TK Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;900&display=swap');
+        *{margin:0;padding:0;box-sizing:border-box;}
+        :root{
+            --bg:#f5f7fa;--card:#ffffff;--surface:#eef1f6;
+            --accent:#2563eb;--glow:rgba(37,99,235,.15);
+            --danger:#dc2626;--success:#16a34a;--warn:#d97706;
+            --t1:#1e293b;--t2:#475569;--t3:#94a3b8;--border:#d1d5db;
+        }
+        body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;}
+
+        .header{background:#ffffff;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06);flex-wrap:wrap;gap:10px;}
+        .header-left{display:flex;align-items:center;gap:10px;}
+        .logo{font-size:1.4em;}
+        .header-title{font-weight:700;font-size:1.05em;letter-spacing:-.5px;color:var(--t1);}
+        .header-sub{font-size:.7em;color:var(--t3);}
+        .header-stats{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+        .stat{display:flex;align-items:center;gap:5px;background:var(--surface);padding:5px 12px;border-radius:20px;font-size:.8em;font-weight:600;border:1px solid var(--border);}
+        .stat.cur{border-color:var(--accent);color:var(--accent);}
+        .stat.ok{border-color:var(--success);color:var(--success);}
+        .stat.ng{border-color:var(--danger);color:var(--danger);}
+
+        .prog-wrap{padding:0 20px;margin-top:10px;}
+        .prog-track{width:100%;height:4px;background:var(--surface);border-radius:2px;overflow:hidden;}
+        .prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#7c3aed);border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1);}
+
+        .main{max-width:1060px;margin:0 auto;padding:20px;}
+
+        .mode-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+        .mode-btn{padding:7px 16px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--t2);font-size:.82em;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;}
+        .mode-btn:hover{border-color:var(--accent);color:var(--accent);}
+        .mode-btn.on{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 10px var(--glow);}
+
+        .cat-bar{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+        .cat-btn{padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--t3);font-size:.75em;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;}
+        .cat-btn:hover{border-color:var(--warn);color:var(--warn);}
+        .cat-btn.on{background:var(--warn);color:#fff;border-color:var(--warn);}
+
+        .card-wrap{perspective:1200px;width:100%;margin-bottom:18px;}
+        .card-inner{position:relative;width:100%;transition:transform .7s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;}
+        .card-inner.flip{transform:rotateY(180deg);}
+        .card-face{width:100%;backface-visibility:hidden;border-radius:20px;overflow:hidden;}
+        .card-front{background:var(--card);border:1px solid var(--border);display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+        .card-back{background:var(--card);border:2px solid var(--success);transform:rotateY(180deg);position:absolute;top:0;left:0;width:100%;min-height:100%;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(0,0,0,.06);}
+
+        .card-topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);background:#fafbfc;}
+        .card-num{font-weight:900;font-size:1.25em;color:var(--accent);}
+        .card-cat{font-size:.72em;color:var(--t2);background:var(--surface);padding:4px 10px;border-radius:6px;font-weight:600;}
+
+        .front-question{margin:0 18px;margin-top:16px;padding:14px 18px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fbbf24;border-radius:12px;display:none;}
+        .front-question.show{display:block;}
+        .front-question .fq-label{font-size:.75em;font-weight:700;color:var(--warn);margin-bottom:6px;letter-spacing:.5px;}
+        .front-question .fq-text{font-size:1em;font-weight:600;color:var(--t1);line-height:1.6;}
+
+        .front-images{
+            padding:16px;
+            display:flex;
+            flex-wrap:wrap;
+            gap:14px;
+            justify-content:center;
+            align-items:center;
+        }
+
+        .img-crop-wrap{
+            position:relative;
+            border-radius:12px;
+            box-shadow:0 4px 16px rgba(0,0,0,.1);
+            background:#1a1a1a;
+            cursor:zoom-in;
+            transition:transform .2s;
+            max-width:100%;
+            overflow:hidden;
+        }
+        .img-crop-wrap:hover{transform:scale(1.02);}
+
+        .img-inner-box {
+            position:absolute;
+            top: -37.3134%;
+            left: -25.7575%;
+            width: 151.5151%;
+            height: 149.2537%;
+            pointer-events:none;
+        }
+
+        .img-inner-box img {
+            display:block;
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
+
+        .img-inner-box.no-crop {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .img-inner-box.no-crop img {
+            object-fit: contain;
+        }
+
+        .front-images.multi .img-crop-wrap{ max-width:calc(50% - 8px); }
+        .front-images.many .img-crop-wrap{ max-width:calc(50% - 8px); }
+
+        .card-prompt{text-align:center;padding:12px;font-size:.82em;color:var(--t3);border-top:1px solid var(--border);background:#fafbfc;}
+        .card-prompt span{color:var(--accent);font-weight:600;}
+
+        .back-topbar{background:rgba(22,163,74,.05);border-bottom:1px solid rgba(22,163,74,.2);}
+        .ans-label{font-weight:700;color:var(--success);font-size:1.1em;}
+        .ans-body{flex:1;padding:32px 28px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+        .ans-category{font-size:.8em;color:var(--warn);font-weight:700;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;background:#fffbeb;padding:4px 12px;border-radius:6px;}
+        .ans-text{font-size:1.4em;font-weight:700;text-align:center;line-height:1.7;color:var(--t1);max-width:700px;}
+        .ans-note{width:100%;max-width:600px;margin-top:24px;background:var(--surface);border-radius:12px;padding:14px;border-left:3px solid var(--accent);}
+        .ans-note-title{font-weight:700;font-size:.8em;color:var(--accent);margin-bottom:6px;}
+        .ans-note textarea{width:100%;min-height:50px;background:#fff;border:1px solid var(--border);border-radius:8px;color:var(--t1);font-family:inherit;font-size:.85em;padding:8px;resize:vertical;}
+        .ans-note textarea:focus{outline:none;border-color:var(--accent);}
+        .back-prompt{border-top:1px solid rgba(22,163,74,.15);background:rgba(22,163,74,.03);}
+
+        .grade-bar{display:flex;gap:10px;justify-content:center;margin-bottom:18px;flex-wrap:wrap;}
+        .g-btn{padding:11px 26px;border-radius:12px;border:2px solid;font-size:.92em;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;}
+        .g-btn.know{border-color:var(--success);background:rgba(22,163,74,.06);color:var(--success);}
+        .g-btn.know:hover{background:var(--success);color:#fff;box-shadow:0 2px 16px rgba(22,163,74,.3);}
+        .g-btn.dunno{border-color:var(--danger);background:rgba(220,38,38,.06);color:var(--danger);}
+        .g-btn.dunno:hover{background:var(--danger);color:#fff;box-shadow:0 2px 16px rgba(220,38,38,.3);}
+        .g-btn.skip{border-color:var(--border);background:transparent;color:var(--t3);}
+        .g-btn.skip:hover{background:var(--surface);color:var(--t2);}
+
+        .nav-bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+        .n-btn{padding:11px 22px;border-radius:12px;border:1px solid var(--border);background:#fff;color:var(--t2);font-size:.88em;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;gap:5px;}
+        .n-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+        .n-btn.pri{background:var(--accent);color:#fff;border-color:var(--accent);}
+        .n-btn.pri:hover{box-shadow:0 2px 16px var(--glow);}
+
+        .kbd-hints{margin-top:20px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+        .kh{display:flex;align-items:center;gap:5px;font-size:.72em;color:var(--t3);}
+        .kh kbd{background:#fff;border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-family:inherit;font-weight:600;color:var(--t2);box-shadow:0 1px 2px rgba(0,0,0,.06);}
+
+        .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center;}
+        .modal-bg.on{display:flex;}
+        .modal{background:#fff;border:1px solid var(--border);border-radius:20px;padding:28px;max-width:420px;width:90%;box-shadow:0 16px 48px rgba(0,0,0,.12);}
+        .modal h3{font-weight:700;margin-bottom:18px;font-size:1.15em;color:var(--t1);}
+        .range-row{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+        .range-row input{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--t1);text-align:center;font-size:1.05em;font-weight:700;font-family:inherit;}
+        .range-row input:focus{outline:none;border-color:var(--accent);}
+        .range-row span{color:var(--t3);font-weight:700;}
+        .modal-acts{display:flex;gap:10px;}
+        .modal-acts button{flex:1;}
+
+        .img-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:center;justify-content:center;cursor:zoom-out;}
+        .img-modal.on{display:flex;}
+        .img-modal-container{
+            position:relative;
+            border-radius:8px;
+            overflow:hidden;
+            display:inline-block;
+        }
+
+        .summary{display:none;text-align:center;padding:40px 20px;}
+        .summary.on{display:block;}
+        .summary h2{font-size:2em;font-weight:900;margin-bottom:6px;color:var(--t1);}
+        .summary .sub{color:var(--t3);margin-bottom:28px;}
+        .sum-stats{display:flex;gap:18px;justify-content:center;margin-bottom:28px;flex-wrap:wrap;}
+        .sum-s{background:#fff;border-radius:16px;padding:22px 28px;border:1px solid var(--border);min-width:130px;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+        .sum-s .n{font-size:2.4em;font-weight:900;}
+        .sum-s .l{font-size:.82em;color:var(--t3);margin-top:4px;}
+        .sum-s.green .n{color:var(--success);}
+        .sum-s.red .n{color:var(--danger);}
+        .sum-s.blue .n{color:var(--accent);}
+
+        .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);background:#fff;color:var(--t1);padding:10px 22px;border-radius:12px;font-weight:600;font-size:.88em;border:1px solid var(--border);box-shadow:0 4px 20px rgba(0,0,0,.1);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:300;}
+        .toast.show{transform:translateX(-50%) translateY(0);}
+
+        @media(max-width:640px){
+            .header{flex-direction:column;gap:8px;}
+            .front-images.multi .img-crop-wrap{max-width:100%;}
+            .front-images.many .img-crop-wrap{max-width:100%;}
+            .ans-text{font-size:1.1em;}
+            .g-btn{padding:9px 14px;font-size:.82em;}
+            .n-btn{padding:9px 14px;font-size:.78em;}
+            .front-question{margin:0 12px;margin-top:12px;}
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div class="logo">🩻</div>
+        <div><div class="header-title">2025 Radiology Flashcard by TK</div><div class="header-sub">구리영상 땡시 케이스</div></div>
+    </div>
+    <div class="header-stats">
+        <div class="stat cur" id="sCur">1 / 127</div>
+        <div class="stat ok" id="sOk">✓ 0</div>
+        <div class="stat ng" id="sNg">✗ 0</div>
+    </div>
+</div>
+
+<div class="prog-wrap"><div class="prog-track"><div class="prog-fill" id="pFill"></div></div></div>
+
+<div class="main" id="quizArea">
+    <div class="mode-bar">
+        <button class="mode-btn on" data-mode="seq" onclick="setMode('seq')">순서대로</button>
+        <button class="mode-btn" data-mode="shuf" onclick="setMode('shuf')">🔀 셔플</button>
+        <button class="mode-btn" data-mode="wrong" onclick="setMode('wrong')">❌ 틀린 것만</button>
+        <button class="mode-btn" data-mode="rand10" onclick="setMode('rand10')">🎲 랜덤 10개</button>
+        <button class="mode-btn" data-mode="yama" onclick="setMode('yama')">🔥 25년 야마</button>
+        <button class="mode-btn" data-mode="yama_shuf" onclick="setMode('yama_shuf')">🔥 25년 야마 셔플</button>
+        <button class="mode-btn" onclick="openRange()">📌 범위</button>
+        <button class="mode-btn" onclick="openSearch()">🔍 검색</button>
+    </div>
+    <div class="cat-bar" id="catBar"></div>
+
+    <div class="card-wrap" onclick="flip(event)">
+        <div class="card-inner" id="card">
+            <div class="card-face card-front" id="cardFront">
+                <div class="card-topbar">
+                    <div class="card-num" id="cNum">No.1</div>
+                    <div class="card-cat" id="cCat">HB & P</div>
+                </div>
+                <div class="front-question" id="fQuestion">
+                    <div class="fq-label">💡 QUESTION</div>
+                    <div class="fq-text" id="fqText"></div>
+                </div>
+
+                <div class="front-images" id="fImgs"></div>
+                <div class="card-prompt">🔍 <span>이 영상의 진단은?</span> — 클릭 또는 Space로 정답 확인</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="card-topbar back-topbar">
+                    <div class="ans-label">✅ 정답</div>
+                    <div class="card-cat" id="bCat"></div>
+                </div>
+                <div class="ans-body" id="ansBody"></div>
+                <div class="card-prompt back-prompt">클릭하여 문제로 · <span>1</span> 알겠어요 <span>2</span> 모르겠어요 <span>3</span> 건너뛰기</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grade-bar">
+        <button class="g-btn know" onclick="grade('know')">✓ 알겠어요</button>
+        <button class="g-btn dunno" onclick="grade('dunno')">✗ 모르겠어요</button>
+        <button class="g-btn skip" onclick="grade('skip')">→ 건너뛰기</button>
+    </div>
+    <div class="nav-bar">
+        <button class="n-btn" onclick="prev()">← 이전</button>
+        <button class="n-btn pri" onclick="flip(null)">🔄 뒤집기</button>
+        <button class="n-btn" onclick="next()">다음 →</button>
+    </div>
+    <div class="kbd-hints">
+        <div class="kh"><kbd>Space</kbd> 뒤집기</div>
+        <div class="kh"><kbd>←</kbd> 이전</div>
+        <div class="kh"><kbd>→</kbd> 다음</div>
+        <div class="kh"><kbd>1</kbd> 알겠어요</div>
+        <div class="kh"><kbd>2</kbd> 모르겠어요</div>
+        <div class="kh"><kbd>3</kbd> 건너뛰기</div>
+    </div>
+</div>
+
+<div class="main summary" id="sumScreen">
+    <h2>🎉 정리 완료!</h2>
+    <p class="sub">수고하셨습니다</p>
+    <div class="sum-stats">
+        <div class="sum-s green"><div class="n" id="smOk">0</div><div class="l">맞은 문제</div></div>
+        <div class="sum-s red"><div class="n" id="smNg">0</div><div class="l">틀린 문제</div></div>
+        <div class="sum-s blue"><div class="n" id="smRate">0%</div><div class="l">정답률</div></div>
+    </div>
+    <div class="nav-bar" style="justify-content:center;">
+        <button class="n-btn pri" onclick="restartAll()">🔄 전체 다시</button>
+        <button class="n-btn" onclick="restartWrong()">❌ 틀린 것만</button>
+    </div>
+</div>
+
+<div class="modal-bg" id="rangeModal">
+    <div class="modal">
+        <h3>📌 범위 지정</h3>
+        <div class="range-row">
+            <input type="number" id="rS" value="1" min="1" max="127">
+            <span>~</span>
+            <input type="number" id="rE" value="127" min="1" max="127">
+        </div>
+        <div class="modal-acts">
+            <button class="n-btn" onclick="closeRange()">취소</button>
+            <button class="n-btn pri" onclick="applyRange()">적용</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-bg" id="searchModal">
+    <div class="modal">
+        <h3>🔍 문제 검색</h3>
+        <div class="range-row">
+            <input type="number" id="sNum" value="1" min="1" max="127" placeholder="문제 번호" onkeypress="if(event.key==='Enter')applySearch()">
+        </div>
+        <div class="modal-acts">
+            <button class="n-btn" onclick="closeSearch()">취소</button>
+            <button class="n-btn pri" onclick="applySearch()">이동</button>
+        </div>
+    </div>
+</div>
+
+<div class="img-modal" id="imgModal" onclick="this.classList.remove('on')">
+    <div class="img-modal-container" id="imgModalContainer">
+        <div class="img-inner-box">
+            <img id="imgModalImg" src="">
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const B='https://raw.githubusercontent.com/taekkeun1428/radiology_exam_gif/main/img/';
+
+const answers={
+1:{cat:'HB & P',ans:'Liver cirrhosis, splenomegaly, GB stone, renal cysts, right renal stone, paraesophageal varices'},
+2:{cat:'HB & P',ans:'Hepatic cysts'},
+3:{cat:'HB & P',ans:'Hemangioma'},
+4:{cat:'HB & P',ans:'Hepatic abscess, s/p left lateral sectionectomy'},
+5:{cat:'HB & P',ans:'Hepatocellular carcinoma (S7/8) & hepatic cyst (S8)'},
+6:{cat:'HB & P',ans:'Mass forming cholangiocellular carcinoma with intrahepatic metastasis'},
+7:{cat:'HB & P',ans:'Hepatic metastasis (from breast cancer)'},
+8:{cat:'HB & P',ans:'Traumatic liver injury'},
+9:{cat:'HB & P',ans:'Acute cholecystitis'},
+10:{cat:'HB & P',ans:'GB stone'},
+11:{cat:'HB & P',ans:'GB cancer with direct invasion to the liver, lymph nodes metastasis and peritoneal carcinomatosis'},
+12:{cat:'HB & P',ans:'CBD & GB stones'},
+13:{cat:'HB & P',ans:'Acute pancreatitis'},
+14:{cat:'HB & P',ans:'Pancreatic ductal adenocarcinoma with hepatic metastasis'},
+15:{cat:'Bowel',ans:'Extensive portal and mesenteric vein thrombosis with ascites, venous infarction of ileum, Splenic infarction, Chronic infarction of right kidney with renal a. stenosis'},
+16:{cat:'Bowel',ans:'Adhesive ileus in distal ileum level'},
+17:{cat:'Bowel',ans:'Proximal transverse colon acute diverticulitis with peritonitis, Myoma uteri'},
+18:{cat:'Bowel',ans:'Pancolitis, hepatic cyst'},
+19:{cat:'Bowel',ans:'Acute appendicitis with appendicolith'},
+20:{cat:'Bowel',ans:'Nonspecific enteritis with minimal ascites'},
+21:{cat:'Bowel',ans:'Panperitonitis with gastric/duodenal ulcer perforation'},
+22:{cat:'Bowel',ans:'Ischemic colitis, calcified uterine myoma, left renal cyst'},
+23:{cat:'Bowel',ans:'Ventral hernia'},
+24:{cat:'Bowel',ans:'Right inguinal hernia'},
+25:{cat:'Bowel',ans:'Left femoral hernia with bowel obstruction'},
+26:{cat:'Bowel',ans:'Active Crohn\'s disease'},
+27:{cat:'Bowel',ans:'Transverse colon cancer (T3N1)'},
+28:{cat:'Bowel',ans:'Ascending colon cancer (T3N1)'},
+29:{cat:'Bowel',ans:'Upper rectal cancer (T4aN1)'},
+30:{cat:'Bowel',ans:'Advanced gastric cancer (T3N2)'},
+31:{cat:'GU+GY',ans:'Left renal cyst, bilateral ovarian corpus luteal cysts'},
+32:{cat:'GU',ans:'Right UVJ stone'},
+33:{cat:'GU',ans:'Polycystic kidney and liver'},
+34:{cat:'GU',ans:'Cystic RCC, Gallstones, myoma uteri'},
+35:{cat:'GY',ans:'Multiple myoma uteri'},
+36:{cat:'GU',ans:'Right RCC with lung meta'},
+37:{cat:'GU',ans:'Acute pyelonephritis, left'},
+38:{cat:'GY',ans:'Endometrial cancer'},
+39:{cat:'GY',ans:'Ovarian teratoma, both'},
+40:{cat:'GY',ans:'Uterine cervix cancer'},
+41:{cat:'GY',ans:'Serous cyst adenocarcinoma, Multiple myoma uteri'},
+42:{cat:'Chest',ans:'Pneumonia (mainly RML)'},
+43:{cat:'Chest',ans:'Active pulmonary TB'},
+44:{cat:'Chest',ans:'Miliary TB'},
+45:{cat:'Chest',ans:'Lung cancer (SPN)'},
+46:{cat:'Chest',ans:'Central lung cancer (Golden S sign)',q:'진단명과 특징적인 sign은?'},
+47:{cat:'Chest',ans:'IPF (interstitial lung disease)'},
+48:{cat:'Chest',ans:'Pulmonary edema (cardiomegaly, pleural effusion)'},
+49:{cat:'Chest',ans:'Acute pulmonary thromboembolism'},
+50:{cat:'Chest',ans:'Pneumothorax'},
+51:{cat:'Chest',ans:'Pneumomediastinum'},
+62:{cat:'Neuro',ans:'Cerebral paragonimiasis'},
+63:{cat:'Neuro',ans:'Brain abscess'},
+64:{cat:'Neuro',ans:'Lateral medullary syndrome (Wallenberg)'},
+65:{cat:'Neuro',ans:'Aneurysm'},
+66:{cat:'Neuro',ans:'MCA infarct with leaked contrast media collection'},
+67:{cat:'Neuro',ans:'Epidermoid'},
+68:{cat:'Neuro',ans:'Anoxic encephalopathy'},
+69:{cat:'Neuro',ans:'Subacute infarct with hemorrhagic transformation'},
+70:{cat:'Head&Neck',ans:'Foreign body (cervical esophagus)'},
+71:{cat:'Head&Neck',ans:'EAC cholesteatoma'},
+72:{cat:'Neuro',ans:'Periventricular leukomalacia'},
+73:{cat:'Neuro',ans:'EDH (Epidural hematoma)'},
+74:{cat:'Neuro',ans:'AVM (brain)'},
+75:{cat:'Neuro',ans:'Moyamoya disease'},
+76:{cat:'Neuro',ans:'Glioblastoma'},
+77:{cat:'Neuro',ans:'Vestibular schwannoma'},
+78:{cat:'Head&Neck',ans:'SAH, A-com aneurysm rupture'},
+79:{cat:'Head&Neck',ans:'Plunging ranula'},
+80:{cat:'Head&Neck',ans:'Papillary carcinoma, thyroid gland'},
+81:{cat:'Head&Neck',ans:'Tuberculous lymphadenitis'},
+82:{cat:'MSK',ans:'Metal artifact in MRI',q:'Image가 잘 안보이는 원인은?'},
+83:{cat:'MSK',ans:'Rectus femoris muscle avulsion - acute AIIS fracture'},
+84:{cat:'MSK',ans:'Soft tissue infection - septic ischial bursitis and hamstring abscess'},
+85:{cat:'MSK',ans:'Insufficiency fracture'},
+86:{cat:'MSK',ans:'Compressive myelopathy, OPLL, vertebral hemangioma'},
+87:{cat:'MSK',ans:'Osteonecrosis femur heads'},
+88:{cat:'MSK',ans:'Rheumatoid arthritis'},
+89:{cat:'MSK',ans:'Osteoarthritis DIPJs'},
+90:{cat:'MSK',ans:'Ankylosing spondylitis'},
+91:{cat:'MSK',ans:'Gouty arthritis'},
+92:{cat:'IR',ans:'Renal artery stenting, Rt renal artery',q:'시술명은? (full term), 문제가 있는 혈관이름은?'},
+93:{cat:'IR',ans:'TIPS (Transjugular Intrahepatic Portosystemic Shunt) / hepatic encephalopathy',q:'시술명은? (full term) 다음 시술로 인해 생길 수 있는 합병증은?'},
+94:{cat:'IR',ans:'TACE (Transcatheter Arterial Chemoembolization) / HCC',q:'시술명은? (full term) 어떤 질환을 치료한 것인가?'},
+95:{cat:'IR',ans:'PARTO (Plug-Assisted Retrograde Transvenous Obliteration) / gastric varix embolization',q:'시술명은? (full term) 다음 시술로 얻을 수 있는 효과는?'},
+96:{cat:'IR',ans:'PTBD (Percutaneous Transhepatic Biliary Drainage) or biliary stent',q:'시술명은? (full term)'},
+97:{cat:'IR',ans:'Scrotal varicocele embolization / 불임, 통증',q:'시술명은? (full term) 상기 환자가 시술을 받은 이유는?'},
+98:{cat:'IR',ans:'AVF (Arteriovenous Fistula) - PTA (Percutaneous Transluminal Angioplasty)',q:'시술명은? (full term)'},
+99:{cat:'IR',ans:'Pulmonary AVM embolization / systemic embolism',q:'진단은? 시술명은? (full term) 시술을 시행하지 않을 경우 생길 수 있는 문제는?'},
+100:{cat:'IR',ans:'IVC filter insertion and removal / thrombus migration 방지, pulmonary embolism 예방',q:'시술명은? (full term) 다음 시술을 시행하는 이유는?'},
+101:{cat:'IR',ans:'Abdominal Aortic Aneurysm / EVAR (Endovascular Aneurysm Repair)',q:'진단은? 시술명은? (full term)'},
+102:{cat:'Chest',ans:'Anterior mediastinal mass'},
+103:{cat:'Chest',ans:'COVID pneumonia'},
+104:{cat:'Chest',ans:'Bone bridge between rt 1st and 2nd rib anterior arc'},
+105:{cat:'Chest',ans:'ILD, NSIP pattern (RA patient)'},
+106:{cat:'Chest',ans:'RML, RLL total atelectasis'},
+107:{cat:'Chest',ans:'A bone island in left 4th rib posterior arc'},
+108:{cat:'Chest',ans:'Bronchiectasis in RUL anterior, LUL lingula, LLL basal'},
+109:{cat:'Chest',ans:'Pulmonary metastasis'},
+110:{cat:'Chest',ans:'SLE, serositis; pericardial effusion, both pleural effusion'},
+111:{cat:'Neuro',ans:'Cavernous malformation with developmental venous anomaly'},
+112:{cat:'Neuro',ans:'Venous sinus thrombosis'},
+113:{cat:'Neuro',ans:'Cephalhematoma'},
+114:{cat:'Neuro',ans:'Progressive supranuclear palsy'},
+115:{cat:'Neuro',ans:'Brain abscess'},
+116:{cat:'Neuro',ans:'Anaplastic astrocytoma with leptomeningeal seeding'},
+117:{cat:'Neuro',ans:'Anterior clinoidal meningioma'},
+118:{cat:'Neuro',ans:'Thalamus lateral geniculate body infarction → horizontal nystagmus'},
+119:{cat:'Head&Neck',ans:'AVM (brain)'},
+120:{cat:'Head&Neck',ans:'Left Ramsay Hunt syndrome'},
+121:{cat:'Neuro',ans:'SDH in spine'},
+122:{cat:'Neuro',ans:'Lt. trigeminal neuritis'},
+123:{cat:'Breast',ans:'Gynecomastia'},
+124:{cat:'Breast',ans:'Intraductal carcinoma'},
+125:{cat:'Breast',ans:'Intraductal carcinoma (w/ microcalcifications)'},
+126:{cat:'Breast',ans:'DM mastopathy'},
+127:{cat:'Breast',ans:'Hamartoma'}
+};
+
+const IMG_MAP = {"1": ["no1.JPG", "no1_2.gif"], "10": ["no10.JPG", "no10_2.gif"], "100": ["no100.JPG", "no100_2.gif"], "101": ["no101.JPG", "no101_2.JPG", "no101_3.JPG", "no101_4.gif"], "102": ["no102.JPG", "no102_2.JPG", "no102_3.JPG"], "103": ["no103.JPG", "no103_2.JPG"], "104": ["no104.JPG"], "105": ["no105.JPG", "no105_2.JPG"], "106": ["no106.JPG", "no106_2.JPG"], "107": ["no107.JPG", "no107_2.JPG", "no107_3.JPG"], "108": ["no108.JPG", "no108_2.JPG", "no108_3.JPG"], "109": ["no109.JPG", "no109_2.JPG"], "11": ["no11.JPG", "no11_2.JPG", "no11_3.gif"], "110": ["no110.JPG", "no110_2.JPG", "no110_3.JPG"], "111": ["no111.JPG", "no111_2.JPG"], "112": ["no112.JPG", "no112_2.JPG"], "113": ["no113.JPG", "no113_2.JPG"], "114": ["no114.JPG"], "115": ["no115.JPG"], "116": ["no116.JPG"], "117": ["no117.JPG", "no117_2.JPG", "no117_3.JPG"], "118": ["no118.JPG", "no118_2.JPG"], "119": ["no119.JPG", "no119_2.JPG"], "12": ["no12.JPG", "no12_2.JPG", "no12_3.JPG", "no12_4.gif"], "120": ["no120.JPG", "no120_2.JPG"], "121": ["no121.JPG"], "122": ["no122.JPG"], "123": ["no123.JPG", "no123_2.JPG"], "124": ["no124.JPG"], "125": ["no125.JPG"], "126": ["no126.JPG"], "127": ["no127.JPG"], "13": ["no13.JPG", "no13_2.JPG", "no13_3.gif"], "14": ["no14.JPG", "no14_2.JPG", "no14_3.gif"], "15": ["no15.JPG", "no15_2.gif", "no15_3.gif"], "16": ["no16.JPG", "no16_2.JPG", "no16_3.gif"], "17": ["no17.JPG", "no17_2.gif"], "18": ["no18.JPG", "no18_2.JPG", "no18_3.gif"], "19": ["no19.JPG", "no19_2.JPG", "no19_3.gif", "no19_4.gif"], "2": ["no2.JPG", "no2_2.gif"], "20": ["no20.JPG", "no20_2.JPG", "no20_3.gif"], "21": ["no21.JPG", "no21_2.JPG"], "22": ["no22.JPG", "no22_2.JPG", "no22_3.gif"], "23": ["no23.JPG", "no23_2.gif"], "24": ["no24.JPG", "no24_2.gif"], "25": ["no25.JPG", "no25_2.gif"], "26": ["no26.JPG", "no26_2.JPG", "no26_3.gif"], "27": ["no27.JPG", "no27_2.JPG", "no27_3.gif"], "28": ["no28.JPG", "no28_2.gif"], "29": ["no29.JPG", "no29_2.JPG", "no29_3.gif"], "3": ["no3.JPG", "no3_2.gif"], "30": ["no30.JPG", "no30_2.JPG", "no30_3.gif"], "31": ["no31.JPG", "no31_2.JPG", "no31_3.JPG", "no31_4.JPG", "no31_5.gif"], "32": ["no32.JPG", "no32_2.JPG", "no32_3.gif"], "33": ["no33.JPG", "no33_2.JPG", "no33_3.gif"], "34": ["no34.JPG", "no34_2.JPG", "no34_3.JPG", "no34_4.gif"], "35": ["no35.JPG", "no35_2.JPG", "no35_3.gif", "no35_4.gif"], "36": ["no36.JPG", "no36_2.JPG", "no36_3.gif"], "37": ["no37.JPG", "no37_2.gif"], "38": ["no38.JPG", "no38_2.JPG", "no38_3.gif"], "39": ["no39.JPG", "no39_2.JPG", "no39_3.gif", "no39_4.gif"], "4": ["no4.JPG", "no4_2.JPG", "no4_3.gif"], "40": ["no40.JPG", "no40_2.JPG", "no40_3.gif"], "41": ["no41.JPG", "no41_2.JPG", "no41_3.JPG", "no41_4.gif"], "42": ["no42.JPG", "no42_2.JPG", "no42_3.gif"], "43": ["no43.JPG", "no43_2.JPG", "no43_3.JPG", "no43_4.gif"], "44": ["no44.JPG", "no44_2.JPG", "no44_3.gif"], "45": ["no45.JPG", "no45_2.JPG", "no45_3.gif"], "46": ["no46.JPG", "no46_2.JPG", "no46_3.gif"], "47": ["no47.JPG", "no47_2.JPG", "no47_3.gif"], "48": ["no48.JPG", "no48_2.JPG", "no48_3.JPG", "no48_4.gif"], "49": ["no49.JPG", "no49_2.JPG", "no49_3.gif"], "5": ["no5.JPG", "no5_2.JPG", "no5_3.gif"], "50": ["no50.JPG", "no50_2.JPG", "no50_3.gif"], "51": ["no51.JPG", "no51_2.gif"], "6": ["no6.JPG", "no6_2.JPG", "no6_3.gif"], "62": ["no62.JPG", "no62_2.gif"], "63": ["no63.JPG", "no63_2.JPG", "no63_3.gif"], "64": ["no64.JPG", "no64_2.JPG", "no64_3.gif"], "65": ["no65.JPG", "no65_2.JPG"], "66": ["no66.JPG", "no66_2.JPG", "no66_3.gif"], "67": ["no67.JPG", "no67_2.gif"], "68": ["no68.JPG", "no68_2.gif"], "69": ["no69.JPG", "no69_2.gif"], "7": ["no7.JPG", "no7_2.gif"], "70": ["no70.JPG", "no70_2.JPG", "no70_3.JPG", "no70_4.gif"], "71": ["no71.JPG", "no71_2.gif"], "72": ["no72.JPG", "no72_2.JPG", "no72_3.gif", "no72_4.gif"], "73": ["no73.JPG", "no73_2.gif"], "74": ["no74.JPG", "no74_2.JPG", "no74_3.gif"], "75": ["no75.JPG", "no75_2.gif"], "76": ["no76.JPG", "no76_2.JPG", "no76_3.gif"], "77": ["no77.JPG", "no77_2.JPG", "no77_3.gif"], "78": ["no78.JPG", "no78_2.JPG", "no78_3.gif", "no78_4.gif"], "79": ["no79.JPG", "no79_2.JPG", "no79_3.gif"], "8": ["no8.JPG", "no8_2.gif"], "80": ["no80.JPG", "no80_2.gif"], "81": ["no81.JPG", "no81_2.JPG", "no81_3.gif"], "82": ["no82.JPG", "no82_2.JPG"], "83": ["no83.JPG", "no83_2.JPG", "no83_3.gif"], "84": ["no84.JPG", "no84_2.JPG", "no84_3.gif", "no84_4.gif"], "85": ["no85.JPG", "no85_2.JPG", "no85_3.gif"], "86": ["no86.JPG", "no86_2.JPG", "no86_3.JPG", "no86_4.gif"], "87": ["no87.JPG", "no87_2.JPG"], "88": ["no88.JPG", "no88_2.JPG"], "89": ["no89.JPG", "no89_2.JPG"], "9": ["no9.JPG", "no9_2.JPG", "no9_3.gif"], "90": ["no90.JPG", "no90_2.JPG", "no90_3.JPG"], "91": ["no91.JPG", "no91_2.JPG"], "92": ["no92.JPG", "no92_2.JPG", "no92_3.gif"], "93": ["no93.JPG", "no93_2.JPG", "no93_3.gif"], "94": ["no94.JPG", "no94_2.JPG", "no94_3.gif"], "95": ["no95.JPG", "no95_2.JPG", "no95_3.gif"], "96": ["no96.JPG", "no96_2.JPG", "no96_3.gif", "no96_4.gif"], "97": ["no97.JPG", "no97_2.JPG", "no97_3.gif"], "98": ["no98.JPG", "no98_2.JPG", "no98_3.gif"], "99": ["no99.JPG", "no99_2.JPG", "no99_3.gif"]};
+
+const ALL=[];
+for(let i=1;i<=127;i++){
+    const a=answers[i];
+    if(!a) continue;
+    let imgs=IMG_MAP[i] || [`no${i}.JPG`];
+    if(imgs.some(img => img.toLowerCase().endsWith('.gif'))){
+        imgs = imgs.filter(img => img.toLowerCase().endsWith('.gif'));
+    }
+    ALL.push({num:i,imgs,cat:a.cat,ans:a.ans,q:a.q||null});
+}
+
+const cats=[...new Set(ALL.map(c=>c.cat))];
+
+let deck=[...ALL],idx=0,scores={},notes={},mode='seq',activeCats=[];
+try{notes=JSON.parse(localStorage.getItem('rn3')||'{}')}catch(e){}
+function saveN(){try{localStorage.setItem('rn3',JSON.stringify(notes))}catch(e){}}
+
+const catBar=document.getElementById('catBar');
+const allBtn=document.createElement('button');
+allBtn.className='cat-btn on';allBtn.textContent='전체';
+allBtn.onclick=()=>filterCat(null);
+catBar.appendChild(allBtn);
+cats.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='cat-btn';b.textContent=c;b.dataset.cat=c;
+    b.onclick=()=>filterCat(c);
+    catBar.appendChild(b);
+});
+
+function filterCat(c){
+    if(c===null){
+        activeCats=[];
+    }else{
+        if(activeCats.includes(c)) activeCats = activeCats.filter(x=>x!==c);
+        else activeCats.push(c);
+    }
+    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('on'));
+    if(activeCats.length===0){
+        catBar.querySelector('.cat-btn').classList.add('on');
+    }else{
+        catBar.querySelectorAll('.cat-btn').forEach(b=>{
+            if(activeCats.includes(b.dataset.cat)) b.classList.add('on');
+        });
+    }
+    rebuildDeck();
+}
+
+const YAMA_LIST = [2,3,6,8,10,11,13,14,16,17,20,21,22,23,24,25,26,27,28,29,38,43,44,47,48,49,103,104,105,106,108,109,62,67,68,69,70,71,76,77,78,79,80,81,114,115,117,122,83,85,87,89,93,95,98,99,101];
+
+function rebuildDeck(){
+    let src=[...ALL];
+    if(activeCats.length > 0) src=src.filter(c=>activeCats.includes(c.cat));
+    if(mode==='wrong'){
+        const wn=Object.entries(scores).filter(([,v])=>v==='dunno').map(([k])=>+k);
+        src=src.filter(c=>wn.includes(c.num));
+        if(!src.length){toast('틀린 문제가 없습니다!');return;}
+    }
+    if(mode==='yama' || mode==='yama_shuf'){
+        src=src.filter(c=>YAMA_LIST.includes(c.num));
+        if(!src.length){toast('해당 카테고리에 야마 문제가 없습니다!');return;}
+    }
+    if(mode==='shuf' || mode==='yama_shuf') shuffle(src);
+    if(mode==='rand10'){
+        shuffle(src);
+        src=src.slice(0,10);
+    }
+    deck=src;idx=0;
+    document.getElementById('quizArea').style.display='';
+    document.getElementById('sumScreen').classList.remove('on');
+    ui();
+}
+
+let currentRenderToken = 0;
+let pendingImages = [];
+
+function ui(){
+    pendingImages.forEach(img => { img.src = ''; });
+    pendingImages = [];
+
+    currentRenderToken++;
+    const token = currentRenderToken;
+
+    const c=deck[idx];
+    document.getElementById('card').classList.remove('flip');
+
+    document.getElementById('cNum').textContent=`No.${c.num}`;
+    document.getElementById('cCat').textContent=c.cat;
+    document.getElementById('bCat').textContent=`No.${c.num}`;
+
+    const fqBox=document.getElementById('fQuestion');
+    const fqText=document.getElementById('fqText');
+    if(c.q){
+        fqText.textContent='Q) '+c.q;
+        fqBox.classList.add('show');
+    } else {
+        fqBox.classList.remove('show');
+    }
+
+    const fDiv=document.getElementById('fImgs');
+    fDiv.innerHTML='';
+    fDiv.className='front-images';
+    if(c.imgs.length===2) fDiv.classList.add('multi');
+    if(c.imgs.length>=3) fDiv.classList.add('many');
+
+    c.imgs.forEach(f=>{
+        const wrap = document.createElement('div');
+        wrap.className = 'img-crop-wrap';
+        wrap.style.display = 'flex';
+        wrap.style.justifyContent = 'center';
+        wrap.style.alignItems = 'center';
+        wrap.style.width = '160px';
+        wrap.style.aspectRatio = '1 / 1';
+
+        const loader = document.createElement('div');
+        loader.innerHTML = '<div style="font-size:1.2em;margin-bottom:4px;">⏳</div><div style="font-size:0.75em;color:var(--t3);font-weight:bold;">로딩 중...</div>';
+        loader.style.textAlign = 'center';
+        wrap.appendChild(loader);
+
+        fDiv.appendChild(wrap);
+
+        const tempImg = new Image();
+        pendingImages.push(tempImg);
+
+        tempImg.onload = function() {
+            if (token !== currentRenderToken) return;
+            const pIdx = pendingImages.indexOf(this);
+            if(pIdx > -1) pendingImages.splice(pIdx, 1);
+
+            loader.remove();
+
+            const isGif = this.src.toLowerCase().endsWith('.gif');
+            wrap.style.display = '';
+            wrap.onclick=(e)=>{e.stopPropagation();openImg(this.src, isGif);};
+
+            const imgInner=document.createElement('div');
+            imgInner.className='img-inner-box' + (isGif ? ' no-crop' : '');
+
+            const displayImg=document.createElement('img');
+            displayImg.src=this.src;
+            displayImg.loading='lazy';
+
+            imgInner.appendChild(displayImg);
+            wrap.appendChild(imgInner);
+
+            let cw = this.naturalWidth;
+            let ch = this.naturalHeight;
+
+            if (!isGif) {
+                cw = this.naturalWidth * 0.66;
+                ch = this.naturalHeight * 0.67;
+            }
+
+            wrap.style.aspectRatio = `${cw} / ${ch}`;
+
+            let maxH = 420;
+            if (c.imgs.length >= 3) maxH = 360;
+            if (window.innerWidth <= 640) {
+                 maxH = c.imgs.length === 1 ? 400 : (c.imgs.length === 2 ? 320 : 280);
+            }
+
+            let targetW = cw;
+            if (ch > maxH) {
+                targetW = cw * (maxH / ch);
+            }
+
+            wrap.style.width = targetW + 'px';
+        };
+
+        tempImg.onerror = function() {
+            if (token !== currentRenderToken) return;
+            loader.innerHTML = '<div style="color:var(--danger);font-weight:bold;font-size:0.8em;">✗ 로딩 실패</div>';
+            wrap.style.border = '1px solid var(--danger)';
+        };
+
+        tempImg.src = B + f;
+    });
+
+    const body=document.getElementById('ansBody');
+    let h='';
+    h+=`<div class="ans-category">${c.cat}</div>`;
+    h+=`<div class="ans-text">${c.ans}</div>`;
+    h+=`<div class="ans-note"><div class="ans-note-title">📝 나의 메모 (자동저장)</div>
+        <textarea id="noteA" placeholder="추가 메모..." oninput="saveNote(${c.num})">${notes[c.num]||''}</textarea></div>`;
+    body.innerHTML=h;
+
+    document.getElementById('sCur').textContent=`${idx+1} / ${deck.length}`;
+    document.getElementById('pFill').style.width=`${((idx+1)/deck.length)*100}%`;
+    const ok=Object.values(scores).filter(v=>v==='know').length;
+    const ng=Object.values(scores).filter(v=>v==='dunno').length;
+    document.getElementById('sOk').textContent=`✓ ${ok}`;
+    document.getElementById('sNg').textContent=`✗ ${ng}`;
+
+    requestAnimationFrame(()=>{
+        const front=document.getElementById('cardFront');
+        document.getElementById('card').style.minHeight=front.offsetHeight+'px';
+    });
+}
+
+function flip(e){
+    if(e&&(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'))return;
+    document.getElementById('card').classList.toggle('flip');
+}
+function next(){if(idx<deck.length-1){idx++;ui();}else showSum();}
+function prev(){if(idx>0){idx--;ui();}}
+function grade(g){scores[deck[idx].num]=g;toast(g==='know'?'✓ 정답!':g==='dunno'?'✗ 오답':'→ 건너뜀');next();}
+function saveNote(n){const t=document.getElementById('noteA');if(t){notes[n]=t.value;saveN();}}
+
+function setMode(m){
+    mode=m;
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
+    document.querySelector(`[data-mode="${m}"]`)?.classList.add('on');
+    rebuildDeck();
+    toast(m==='seq'?'순서대로':m==='shuf'?'셔플 모드':m==='wrong'?'틀린 것만':m==='yama'?'25년 야마':m==='yama_shuf'?'25년 야마 셔플':'랜덤 10개');
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+
+function openRange(){document.getElementById('rangeModal').classList.add('on');}
+function closeRange(){document.getElementById('rangeModal').classList.remove('on');}
+function applyRange(){
+    let s=+document.getElementById('rS').value||1,e=+document.getElementById('rE').value||127;
+    s=Math.max(1,Math.min(127,s));e=Math.max(s,Math.min(127,e));
+    deck=ALL.filter(c=>c.num>=s&&c.num<=e);
+    if(activeCats.length > 0) deck=deck.filter(c=>activeCats.includes(c.cat));
+    if(mode==='shuf') shuffle(deck);
+    if(!deck.length){toast('해당 범위에 카드가 없습니다');return;}
+    idx=0;closeRange();
+    document.getElementById('quizArea').style.display='';
+    document.getElementById('sumScreen').classList.remove('on');
+    ui();toast(`범위: No.${s}~${e} (${deck.length}장)`);
+}
+
+function openSearch(){
+    document.getElementById('searchModal').classList.add('on');
+    setTimeout(()=>document.getElementById('sNum').focus(), 50);
+}
+function closeSearch(){document.getElementById('searchModal').classList.remove('on');}
+function applySearch(){
+    let n = +document.getElementById('sNum').value;
+    if(!n) return;
+    let foundIdx = deck.findIndex(c => c.num === n);
+    if(foundIdx !== -1) {
+        idx = foundIdx;
+        closeSearch();
+        document.getElementById('quizArea').style.display='';
+        document.getElementById('sumScreen').classList.remove('on');
+        ui();
+        toast(`${n}번 문제로 이동`);
+    } else {
+        let allFoundIdx = ALL.findIndex(c => c.num === n);
+        if(allFoundIdx !== -1) {
+            activeCats=[];
+            mode='seq';
+            document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('on'));
+            const allCatBtn=document.querySelector('.cat-bar').firstChild;
+            if(allCatBtn) allCatBtn.classList.add('on');
+            document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
+            document.querySelector(`[data-mode="seq"]`)?.classList.add('on');
+            deck=[...ALL];
+            idx = deck.findIndex(c=>c.num===n);
+            closeSearch();
+            document.getElementById('quizArea').style.display='';
+            document.getElementById('sumScreen').classList.remove('on');
+            ui();
+            toast(`전체 범위에서 ${n}번 문제로 이동`);
+        } else {
+            toast('해당 번호의 문제가 없습니다.');
+        }
+    }
+}
+
+function openImg(src, isGif){
+    const wrap = document.getElementById('imgModalContainer');
+    const img = document.getElementById('imgModalImg');
+    const innerBox = wrap.querySelector('.img-inner-box');
+
+    if (isGif) {
+        innerBox.classList.add('no-crop');
+    } else {
+        innerBox.classList.remove('no-crop');
+    }
+
+    wrap.style.width = 'auto';
+    wrap.style.aspectRatio = 'auto';
+
+    img.onload = function() {
+        let cw = this.naturalWidth;
+        let ch = this.naturalHeight;
+
+        if (!isGif) {
+            cw = this.naturalWidth * 0.66;
+            ch = this.naturalHeight * 0.67;
+        }
+
+        wrap.style.aspectRatio = `${cw} / ${ch}`;
+
+        let maxH = window.innerHeight * 0.92;
+        let maxW = window.innerWidth * 0.92;
+
+        let targetW = cw;
+        if (ch > maxH) {
+            targetW = cw * (maxH / ch);
+        }
+        if (targetW > maxW) {
+            targetW = maxW;
+        }
+
+        wrap.style.width = targetW + 'px';
+    };
+    img.src = src;
+    document.getElementById('imgModal').classList.add('on');
+}
+
+function showSum(){
+    document.getElementById('quizArea').style.display='none';
+    const s=document.getElementById('sumScreen');s.classList.add('on');
+    const ok=Object.values(scores).filter(v=>v==='know').length;
+    const ng=Object.values(scores).filter(v=>v==='dunno').length;
+    const t=ok+ng;const r=t?Math.round(ok/t*100):0;
+    document.getElementById('smOk').textContent=ok;
+    document.getElementById('smNg').textContent=ng;
+    document.getElementById('smRate').textContent=r+'%';
+}
+
+function restartAll(){scores={};activeCats=[];filterCat(null);setMode('seq');}
+function restartWrong(){setMode('wrong');}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT')return;
+    switch(e.key){
+        case ' ':case'Enter':e.preventDefault();flip(null);break;
+        case'ArrowRight':next();break;case'ArrowLeft':prev();break;
+        case'1':grade('know');break;case'2':grade('dunno');break;case'3':grade('skip');break;
+    }
+});
+
+let tx=0;
+document.addEventListener('touchstart',e=>{tx=e.changedTouches[0].screenX;});
+document.addEventListener('touchend',e=>{const d=e.changedTouches[0].screenX-tx;if(Math.abs(d)>80){d>0?prev():next();}});
+
+ui();
+</script>
+</body>
+</html>
